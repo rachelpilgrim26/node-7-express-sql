@@ -10,13 +10,9 @@ const db = new pg.Pool({
   connectionString: config.databaseUrl,
   ssl: true,
 });
-
 const app = express();
-
 app.use(express.json());
-
 const port = 3000;
-
 app.listen(port, () => {
   console.log(`Server is listening on port #${port}`);
 });
@@ -31,15 +27,13 @@ async function getAllAnimals() {
   const data = await db.query("SELECT * FROM animals");
   return data.rows;
 }
-// 2. getOneAnimalByName(name)
+
 async function getOneAnimalByName(name) {
   const data = await db.query("SELECT * FROM animals WHERE name = $1", [name]);
-  //   console.log(data.rows);
   return data.rows[0];
 }
 
 // 3. getOneAnimalById(id)
-
 async function getOneAnimalById(animalId) {
   const data = await db.query("SELECT * FROM animals WHERE id = $1", [
     animalId,
@@ -51,8 +45,24 @@ async function getNewestAnimal() {
   const data = await db.query("SELECT * FROM animals ORDER BY id DESC LIMIT 1");
   return data.rows[0];
 }
-// 5. deleteOneAnimal(id)
 
+//GET get-all-mammals
+async function getAllMammals() {
+  const data = await db.query(
+    "SELECT * FROM animals WHERE category = 'mammal'"
+  );
+  return data.rows;
+}
+
+// get-anaimal-by-catergory
+async function getAnimalsByCategory(category) {
+  const data = await db.query("SELECT * FROM animals WHERE category = $1", [
+    category,
+  ]);
+  return data.rows;
+}
+
+// 5. deleteOneAnimal(id)
 async function deleteOneAnimalByName(animalName) {
   const data = await db.query("DELETE FROM animals WHERE name = $1", [
     animalName,
@@ -61,11 +71,25 @@ async function deleteOneAnimalByName(animalName) {
 }
 
 // 6. addOneAnimal(name, category, can_fly, lives_in)
+async function addOneAnimal(name, category, can_fly, lives_in) {
+  await db.query(
+    "INSERT INTO animals (name, category, can_fly, lives_in) VALUES ($1, $2, $3, $4)",
+    [name, category, can_fly, lives_in]
+  );
+}
 
 // 7. updateOneAnimalName(id, newName)
+async function updateOneAnimalName(id, newName) {
+  await db.query("UPDATE animals SET name = $1 WHERE id = $2", [newName, id]);
+}
 
 // 8. updateOneAnimalCategory(id, newCategory)
-
+async function updateOneAnimalCategory(id, newCategory) {
+  await db.query("UPDATE animals SET category = $1 WHERE id = $2", [
+    newCategory,
+    id,
+  ]);
+}
 // ---------------------------------
 // API Endpoints
 // ---------------------------------
@@ -93,6 +117,24 @@ app.get("/get-newest-animal", async (req, res) => {
   const animal = await getNewestAnimal();
   res.json(animal);
 });
+
+// GET get-all-mammals
+app.get("/get-all-mammals", async (req, res) => {
+  const mammals = await getAllMammals();
+  res.json(mammals);
+});
+
+// GET get-animals-by-category/:category
+app.get("/get-animals-by-category/:category", async (req, res) => {
+  const category = req.params.category;
+  const animals = await getAnimalsByCategory(category);
+  res.json(animals);
+});
+
+// ---------------------------------
+// Post endpoints
+// ---------------------------------
+
 // 5. POST /delete-one-animal/:id
 app.post("/delete-one-animal/:name", async (req, res) => {
   const deleteOneAnimal = req.params.name;
@@ -100,7 +142,22 @@ app.post("/delete-one-animal/:name", async (req, res) => {
   res.send(`Success! ${deleteOneAnimal} was deleted!`);
 });
 // 6. POST /add-one-animal
-
+app.post("/add-one-animal", async (req, res) => {
+  const { name, category, can_fly, lives_in } = req.body;
+  await addOneAnimal(name, category, can_fly, lives_in);
+  res.send(`Sucess! Animal was added.`);
+});
 // 7. POST /update-one-animal-name
 
+app.post("/update-one-animal-name", async (req, res) => {
+  const { id, newName } = req.body;
+  await updateOneAnimalName(id, newName);
+  res.send(`Success! The animal's name was updated.`);
+});
+
 // 8. POST /update-one-animal-category
+app.post("/update-one-animal-category", async (req, res) => {
+  const { id, newCategory } = req.body;
+  await updateOneAnimalCategory(id, newCategory);
+  res.send("Success! The animal's category was updated!");
+});
