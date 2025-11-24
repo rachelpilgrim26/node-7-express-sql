@@ -63,7 +63,7 @@ async function getAnimalsByCategory(category) {
 }
 
 // 5. deleteOneAnimal(id)
-async function deleteOneAnimalByName(animalName) {
+async function deleteOneAnimalId(animalName) {
   const data = await db.query("DELETE FROM animals WHERE name = $1", [
     animalName,
   ]);
@@ -100,6 +100,7 @@ app.get("/get-all-animals", async (req, res) => {
   const animals = await getAllAnimals();
   res.json(animals);
 });
+
 // 2. GET /get-one-animal-by-name/:name
 app.get("/get-one-animal-by-name/:name", async (req, res) => {
   let name = req.params.name;
@@ -136,12 +137,20 @@ app.get("/get-animals-by-category/:category", async (req, res) => {
 // Post endpoints
 // ---------------------------------
 
-// 5. POST /delete-one-animal/:id
-app.post("/delete-one-animal/:name", async (req, res) => {
-  const deleteOneAnimal = req.params.name;
-  await deleteOneAnimalByName(deleteOneAnimal);
+// POST /delete-one-animal/:id
+app.post("/delete-one-animal/:id", async (req, res) => {
+  const deleteOneAnimal = req.params.id;
+  await deleteOneAnimalId(deleteOneAnimal);
   res.send(`Success! ${deleteOneAnimal} was deleted!`);
 });
+
+// app.post("/delete-one-animal/:id", async (req, res) => {
+//   const id = req.params.id;
+//   await deletedAnimal =  await deletedOneAnimal(id)
+//   res.json(deletedAnimal)
+
+// });
+
 // 6. POST /add-one-animal
 app.post("/add-one-animal", async (req, res) => {
   const { name, category, can_fly, lives_in } = req.body;
